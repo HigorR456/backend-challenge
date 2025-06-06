@@ -21,9 +21,8 @@ export class UrlService {
       }
     });
 
-    const baseUrl = process.env.BASE_URL || 'http://localhost';
-    const port = process.env.PORT || '4000';
-    const fullUrl = `${baseUrl}:${port}/${shortCode}`;
+    const domainUrl = process.env.DOMAIN_URL || 'http://localhost';
+    const fullUrl = `${domainUrl}/${shortCode}`;
 
     return fullUrl;
   }
