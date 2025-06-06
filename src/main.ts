@@ -1,15 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { GlobalExceptionFilter } from './filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableShutdownHooks();
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   await app.listen(process.env.PORT ?? 3000);
 
-  console.log(
-    `Server is running, GraphQL Playground available at http://${process.env.HOST}:${process.env.PORT}`,
-  );
 }
 bootstrap();

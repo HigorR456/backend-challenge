@@ -4,17 +4,17 @@ import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private ormService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
   @Post('login')
   @HttpCode(200)
   async login(@Body() authPayload: LoginDto) {
-    return await this.ormService.validateUser(authPayload);
+    return await this.authService.validateUser(authPayload);
   }
 
   @Post('register')
   async register(@Body() registerPayload: RegisterDto) {
-    return await this.ormService.register(registerPayload);
+    return await this.authService.register(registerPayload);
   }
 
   /*
