@@ -29,7 +29,7 @@ export class UrlService {
   }
 
   async resolveUrl({ shortCode }: ResolveDto): Promise<string> {
-    const { originalUrl } = await this.ormService.shortUrl.update({
+    const shortUrl = await this.ormService.shortUrl.update({
       where: { shortCode },
       data: {
         clickCount: {
@@ -41,7 +41,11 @@ export class UrlService {
       },
     });
 
-    return originalUrl;
+    if (!shortUrl) {
+      throw new NotFoundException();
+    }
+
+    return shortUrl.originalUrl;
   }
 
   async getUrlsByUser(user: User) {
@@ -52,7 +56,7 @@ export class UrlService {
   }
 
   async updateUrl(shortCode: string, data: UpdateUrlDto, user: User) {
-    const existing = await this.ormService.shortUrl.findUnique({
+    const shortUrl = await this.ormService.shortUrl.findUnique({
       where: {
         shortCode,
         deletedAt: null,
@@ -60,16 +64,12 @@ export class UrlService {
       },
     });
   
-    if (!existing) {
+    if (!shortUrl) {
       throw new NotFoundException();
     }
   
-    if (existing.userId !== user.id) {
-      throw new ForbiddenException();
-    }
-  
-    return this.ormService.shortUrl.update({
-      where: { id: existing.id },
+    return await this.ormService.shortUrl.update({
+      where: { id: shortUrl.id },
       data: {
         originalUrl: data.originalUrl,
         updatedAt: new Date(),
@@ -77,20 +77,20 @@ export class UrlService {
     });
   }
 
-  async deleteUrl(id: string, user: any) {
-    const existing = await this.ormService.shortUrl.findUnique({
-      where: { id },
+  async deleteUrl(id: string, user: User) {
+    const shortUrl = await this.ormService.shortUrl.findUnique({
+      where: {
+        id,
+        deletedAt: null,
+        userId: user.id,
+      },
     });
 
-    if (!existing) {
+    if (!shortUrl) {
       throw new NotFoundException();
     }
 
-    if (existing.userId !== user?.id) {
-      throw new ForbiddenException();
-    }
-
-    return this.ormService.shortUrl.update({
+    return await this.ormService.shortUrl.update({
       where: { id },
       data: {
         deletedAt: new Date(),
