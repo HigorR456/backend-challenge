@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { UrlService } from './url.service';
 import { ResolveDto, ShortenDto, UpdateUrlDto } from './url.dto';
 import { OptionalAuthGuard } from 'src/auth/optional-auth.guard.ts';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/shared/entity';
 
@@ -11,8 +11,12 @@ export class RedirectController {
   constructor(private urlService: UrlService) {}
 
   @Get(':shortCode')
-  async resolveUrl(@Param() data: ResolveDto) {
-    return await this.urlService.resolveUrl(data)
+  async resolveUrl(
+    @Param() data: ResolveDto,
+    @Res() res: Response,
+  ) {
+    const originalUrl = await this.urlService.resolveUrl(data)
+    return res.redirect(302, originalUrl);
   }
 }
 
@@ -26,7 +30,6 @@ export class UrlController {
     @Body() data: ShortenDto,
     @Req() req: Request
   ) {
-    console.log(req.user)
     const user = req.user as User;
     return await this.urlService.shortenUrl(data, user)
   }

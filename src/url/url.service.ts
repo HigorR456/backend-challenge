@@ -13,9 +13,11 @@ export class UrlService {
   async shortenUrl({ originalUrl }: ShortenDto, user?: User): Promise<string> {
     const shortCode = this.nanoid();
 
+    const normalizedUrl = /^https?:\/\//i.test(originalUrl) ? originalUrl : `https://${originalUrl}`;
+
     await this.ormService.shortUrl.create({
       data: {
-        originalUrl,
+        originalUrl: normalizedUrl,
         shortCode,
         userId: user?.id || null,
       }
@@ -29,7 +31,10 @@ export class UrlService {
 
   async resolveUrl({ shortCode }: ResolveDto): Promise<string> {
     const shortUrl = await this.ormService.shortUrl.update({
-      where: { shortCode },
+      where: {
+        shortCode,
+        deletedAt: null,
+      },
       data: {
         clickCount: {
           increment: 1,
