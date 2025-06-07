@@ -1,4 +1,4 @@
-export class User {
+export class UserEntity {
   id: string;
   email: string;
   createdAt: Date;

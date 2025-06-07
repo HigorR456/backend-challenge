@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { AuthResponseDto, LoginDto, RegisterDto } from './auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -11,7 +11,7 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async validateUser({ email, password }: LoginDto) {
+  async validateUser({ email, password }: LoginDto): Promise<AuthResponseDto> {
     const user = await this.ormService.user.findUnique({ where: { email } });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
@@ -20,14 +20,18 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email };
 
-    return { acessToken: this.jwt.sign(payload) };
+    return {
+      accessToken: this.jwt.sign(payload),
+      tokenType: 'Bearer',
+      expiresIn: process.env.JWT_EXPIRATION,
+    };
   }
 
-  async register({ email, password }: RegisterDto) {
+  async register({ email, password }: RegisterDto): Promise<AuthResponseDto> {
     const existingUser = await this.ormService.user.findUnique({ where: { email } });
 
     if (existingUser) {
-      throw new ConflictException('Email is already registered');
+      throw new ConflictException('Email is already in use');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -41,6 +45,10 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email };
 
-    return { acessToken: this.jwt.sign(payload) };
+    return {
+      accessToken: this.jwt.sign(payload),
+      tokenType: 'Bearer',
+      expiresIn: process.env.JWT_EXPIRATION,
+    };
   }
 }

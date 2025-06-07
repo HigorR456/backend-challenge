@@ -1,8 +1,9 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { customAlphabet } from 'nanoid';
-import { ResolveDto, ShortenDto, UpdateUrlDto } from './url.dto';
+import { GetUrlsByUserResponseDto, ResolveDto, ShortenDto, ShortenUrlResponseDto, UpdateUrlDto } from './url.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { User } from 'src/shared/entity';
+import { UserEntity } from 'src/shared/entity';
+import { ShortUrl } from '@prisma/client';
 
 @Injectable()
 export class UrlService {
@@ -10,7 +11,7 @@ export class UrlService {
 
   private nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 6);
 
-  async shortenUrl({ originalUrl }: ShortenDto, user?: User): Promise<string> {
+  async shortenUrl({ originalUrl }: ShortenDto, user?: UserEntity): Promise<ShortenUrlResponseDto> {
     const shortCode = this.nanoid();
 
     const normalizedUrl = /^https?:\/\//i.test(originalUrl) ? originalUrl : `https://${originalUrl}`;
@@ -26,7 +27,7 @@ export class UrlService {
     const domainUrl = process.env.DOMAIN_URL || 'http://localhost';
     const fullUrl = `${domainUrl}/${shortCode}`;
 
-    return fullUrl;
+    return { fullUrl };
   }
 
   async resolveUrl({ shortCode }: ResolveDto): Promise<string> {
@@ -52,14 +53,16 @@ export class UrlService {
     return shortUrl.originalUrl;
   }
 
-  async getUrlsByUser(user: User) {
-    return await this.ormService.shortUrl.findMany({
+  async getUrlsByUser(user: UserEntity): Promise<GetUrlsByUserResponseDto> {
+    const urls = await this.ormService.shortUrl.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
+
+    return { urls };
   }
 
-  async updateUrl(shortCode: string, data: UpdateUrlDto, user: User) {
+  async updateUrl(shortCode: string, data: UpdateUrlDto, user: UserEntity): Promise<ShortUrl> {
     const shortUrl = await this.ormService.shortUrl.findUnique({
       where: {
         shortCode,
@@ -81,7 +84,7 @@ export class UrlService {
     });
   }
 
-  async deleteUrl(id: string, user: User) {
+  async deleteUrl(id: string, user: UserEntity): Promise<ShortUrl> {
     const shortUrl = await this.ormService.shortUrl.findUnique({
       where: {
         id,
