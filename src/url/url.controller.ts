@@ -5,7 +5,7 @@ import { OptionalAuthGuard } from 'src/auth/optional-auth.guard.ts';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/shared/entity';
-import { ApiBearerAuth, ApiBody, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from 'src/shared/decorators';
 
 @Controller()
@@ -13,10 +13,19 @@ export class RedirectController {
   constructor(private urlService: UrlService) {}
 
   @Get(':shortCode')
-  @ApiOperation({ summary: '', description: '' })
-  @ApiBody({ description: '', type: '' })
-  @ApiOkResponse({ description: '', type: '', example: '' })
-  // TODO: bad response
+  @ApiOperation({ summary: 'Resolve URL', description: 'Redirect to original URL thorugh shortCode' })
+  @ApiParam({ name: 'shortCode', description: 'ShortCode reference of the original URL', type: ResolveDto  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to the original URL',
+    headers: {
+      Location: {
+        description: 'The original URL to redirect to',
+        schema: { type: 'string', example: 'https://github.com/HigorR456' }
+      }
+  } })
+  @ApiNotFoundResponse({ description: 'Short code not found' })
+  @ApiBadRequestResponse({ description: 'Invalid short code' })
   async resolveUrl(
     @Param() data: ResolveDto,
     @Res() res: Response,
@@ -36,7 +45,7 @@ export class UrlController {
   @ApiBody({ description: 'URL to be shortened', type: ShortenDto })
   @ApiBearerAuth()
   @ApiOkResponse({ description: 'Created shortened URL', type: ShortenUrlResponseDto, example: ShortenUrlResponseDto })
-  // TODO: bad response
+  @ApiBadRequestResponse({ description: 'Missing required fields' })
   async shortenUrl(
     @Body() data: ShortenDto,
     @User() user: UserEntity,

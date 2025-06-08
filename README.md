@@ -23,6 +23,11 @@ API RESTful para encurtamento de URLs com autenticação de usuários.
 [x] Uso de variáveis de ambiente para configs sensíveis (ex: DB, JWT secret)  
 [x] Documentação de uso no README (como rodar o projeto)  
 
+## TODO list
+
+[ ] Adicionar á lista de URLs os parâmetros de paginação, filtro por data e ordenação   
+[ ] Teste e2e
+
 ## 🚀 Como rodar o projeto
 
 ### 1. Clone o repositório

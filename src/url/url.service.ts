@@ -47,7 +47,7 @@ export class UrlService {
     });
 
     if (!shortUrl) {
-      throw new NotFoundException();
+      throw new NotFoundException('Short code not found');
     }
 
     return shortUrl.originalUrl;

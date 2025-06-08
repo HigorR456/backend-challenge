@@ -5,6 +5,9 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+
+const logger = new Logger('GlobalExceptionFilter');
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -25,6 +28,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           : (responseBody as any).message || message;
     }
 
+    logger.error(
+      `Error processing request ${request.method} ${request.url}`,
+      (exception as any)?.stack || exception as any,
+    );
+    
     response.status(status).json({
       statusCode: status,
       message,
