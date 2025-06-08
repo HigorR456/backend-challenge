@@ -36,7 +36,6 @@ $ git clone https://github.com/HigorR456/backend-challenge
 ```
 
 ### 2. Instale as dependências
-
 ```bash
 $ yarn install
 ```
@@ -62,3 +61,37 @@ $ yarn run start:dev
 # production mode
 $ yarn run start:prod
 ```
+
+### 6. Rodando o projeto com Docker
+Copie o arquivo de variáveis de ambiente:
+```bash
+$ cp .env.example .env
+```
+
+Edite o .env se necessário. Certifique-se das informações:
+```bash
+# Banco de dados (usado pela aplicação)
+$ DATABASE_URL=postgresql://postgres:root@localhost:5432/urlshortener
+
+# Configuração do Docker Compose - Banco de dados PostgreSQL
+$ POSTGRES_USER=postgres
+$ POSTGRES_PASSWORD=root
+$ POSTGRES_DB=urlshortener
+
+# Configuração do script de migração - Usado pelo entrypoint.sh para aguardar o banco
+$ DB_HOST=localhost
+$ DB_PORT=5432
+$ DB_USER=postgres
+```
+
+Suba os containeres
+```bash
+$ docker-compose up --build
+```
+
+Depois caso queira parar os containers e remover também os volumes anônimos criados use:
+```bash
+$ docker-compose down -v
+```
+
+

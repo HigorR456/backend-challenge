@@ -13,8 +13,8 @@ export class RedirectController {
   constructor(private urlService: UrlService) {}
 
   @Get(':shortCode')
-  @ApiOperation({ summary: 'Resolve URL', description: 'Redirect to original URL thorugh shortCode' })
-  @ApiParam({ name: 'shortCode', description: 'ShortCode reference of the original URL', type: ResolveDto  })
+  @ApiOperation({ summary: 'Resolve URL', description: 'Redirects to the original URL. ⚠️ Testing in Swagger will show "Failed to fetch" - this is expected behavior. Test directly in browser, example: http://localhost:4000/abc123.' })
+  @ApiParam({ name: 'shortCode', description: 'ShortCode reference of the original URL', type: String  })
   @ApiResponse({
     status: 302,
     description: 'Redirects to the original URL',
@@ -43,7 +43,7 @@ export class UrlController {
   @UseGuards(OptionalAuthGuard)
   @ApiOperation({ summary: 'Shorten URL', description: 'Create a shortened version of a URL. Authentication is optional - authenticated users can manage their URLs, while anonymous users can only create shortened URLs.' })
   @ApiBody({ description: 'URL to be shortened', type: ShortenDto })
-  @ApiBearerAuth()
+  @ApiBearerAuth('accessToken')
   @ApiOkResponse({ description: 'Created shortened URL', type: ShortenUrlResponseDto, example: ShortenUrlResponseDto })
   @ApiBadRequestResponse({ description: 'Missing required fields' })
   async shortenUrl(
@@ -57,7 +57,7 @@ export class UrlController {
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Urls from authenticated user', description: 'Retrieve all Urls of the authenticated user' })
-  @ApiBearerAuth()
+  @ApiBearerAuth('accessToken')
   @ApiOkResponse({ description: 'All Urls created by user', type: GetUrlsByUserResponseDto, example: GetUrlsByUserResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   async getMyUrls(
@@ -70,7 +70,7 @@ export class UrlController {
   @Patch(':shortCode')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Update shortened Url', description: 'Update the original Url of a ShortUrl owned by the authenticated user' })
-  @ApiBearerAuth()
+  @ApiBearerAuth('accessToken')
   @ApiOkResponse({ description: 'Updated Url data', type: ShortUrlsDto, example: ShortUrlsDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   @ApiNotFoundResponse({ description: 'Short code not found' })
@@ -85,7 +85,7 @@ export class UrlController {
   @Delete(':shortCode')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Delete Url', description: 'Soft delete the ShortUrl register owned by the authenticated user' })
-  @ApiBearerAuth()
+  @ApiBearerAuth('accessToken')
   @ApiOkResponse({ description: 'Deleted Url data', type: ShortUrlsDto, example: ShortUrlsDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   @ApiNotFoundResponse({ description: 'Short code not found' })

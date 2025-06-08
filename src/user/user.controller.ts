@@ -13,7 +13,7 @@ export class UserController {
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Get authenticated user profile', description: 'Retrieve profile information of the authenticated user' })
-  @ApiBearerAuth()
+  @ApiBearerAuth('accessToken')
   @ApiOkResponse({ description: "User profile information", type: UserResponseDto, example: UserResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
   async getProfile(

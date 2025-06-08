@@ -84,21 +84,23 @@ export class UrlService {
     });
   }
 
-  async deleteUrl(id: string, user: UserEntity): Promise<ShortUrl> {
+  async deleteUrl(shortCode: string, user: UserEntity): Promise<ShortUrl> {
     const shortUrl = await this.ormService.shortUrl.findUnique({
       where: {
-        id,
+        shortCode,
         deletedAt: null,
         userId: user.id,
       },
     });
+
+    console.log(shortUrl, user)
 
     if (!shortUrl) {
       throw new NotFoundException();
     }
 
     return await this.ormService.shortUrl.update({
-      where: { id },
+      where: { shortCode },
       data: {
         deletedAt: new Date(),
       }
