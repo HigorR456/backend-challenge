@@ -94,4 +94,7 @@ Depois caso queira parar os containers e remover também os volumes anônimos cr
 $ docker-compose down -v
 ```
 
+### 7. Acessando a documentação
+
+Você pode acessar a documentação acessando /api, exemplo: http://localhost:4000/api
 
