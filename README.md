@@ -30,7 +30,7 @@ Você pode acessar por esse URL encurtado que redireciona para a documentação:
 
 ## TODO list
 
-[ ] Adicionar á lista de URLs os parâmetros de paginação, filtro por data e ordenação   
+[ ] Adicionar ao endpoint que lista as URLs do usuário parâmetros como: paginação, filtro por data e ordenação   
 [ ] Teste e2e
 
 ## 🚀 Como rodar o projeto
