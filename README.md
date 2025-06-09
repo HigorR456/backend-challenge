@@ -73,7 +73,7 @@ $ cp .env.example .env
 Edite o .env se necessário. Certifique-se das informações:
 ```bash
 # Banco de dados (usado pela aplicação)
-$ DATABASE_URL=postgresql://postgres:root@localhost:5432/urlshortener
+$ DATABASE_URL=postgresql://postgres:root@db:5432/urlshortener
 
 # Configuração do Docker Compose - Banco de dados PostgreSQL
 $ POSTGRES_USER=postgres
@@ -81,7 +81,7 @@ $ POSTGRES_PASSWORD=root
 $ POSTGRES_DB=urlshortener
 
 # Configuração do script de migração - Usado pelo entrypoint.sh para aguardar o banco
-$ DB_HOST=localhost
+$ DB_HOST=db
 $ DB_PORT=5432
 $ DB_USER=postgres
 ```
