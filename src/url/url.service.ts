@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { customAlphabet } from 'nanoid';
 import { GetUrlsByUserResponseDto, ResolveDto, ShortenDto, ShortenUrlResponseDto, UpdateUrlDto } from './url.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
