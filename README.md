@@ -98,5 +98,5 @@ $ docker-compose down -v
 
 ### 7. Acessando a documentação
 
-Você pode acessar a documentação acessando /api, exemplo: http://localhost:4000/api
+Você pode acessar a documentação acessando /api, [https://backend-challenge-a8wt.onrender.com/api](https://backend-challenge-a8wt.onrender.com/api)
 
