@@ -2,7 +2,7 @@
 
 API RESTful para encurtamento de URLs com autenticação de usuários.    
 O projeto está rodando em produção através de um web service criado no [render](https://render.com/)    
-Você pode acessar por esse URL encurtado que redireciona para a API: [https://backend-challenge-a8wt.onrender.com/N8MRVE](https://backend-challenge-a8wt.onrender.com/N8MRVE)    
+Você pode acessar por esse URL encurtado que redireciona para a documentação: [https://backend-challenge-a8wt.onrender.com/N8MRVE](https://backend-challenge-a8wt.onrender.com/N8MRVE)    
 
 ## Checklist de features do projeto
 
