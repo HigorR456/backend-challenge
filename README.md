@@ -7,7 +7,7 @@ Você pode acessar por esse URL encurtado que redireciona para a documentação:
 ## Checklist de features do projeto
 
 [x] Implementado com a última versão estável do Node: 22.16.0  
-[x] API RESTful com Node.js (última versão estável)  
+[x] API RESTful com NestJS
 [x] Banco de dados relacional com suporte a soft delete (deleted_at)  
 [x] Autenticação com e-mail e senha (Bearer Token)  
 [x] Cadastro de usuários  
