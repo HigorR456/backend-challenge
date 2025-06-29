@@ -29,14 +29,11 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/yarn.lock ./
 COPY --from=build /app/prisma ./prisma
 
-# Copy entrypoint script
-COPY entrypoint.sh ./
-RUN chmod +x entrypoint.sh
-
 # Environment variables
 ENV NODE_ENV=production
 ENV PORT=4000
 
 EXPOSE 4000
 
-CMD ["./entrypoint.sh"]
+# Start NestJS application
+CMD ["node", "dist/main"]

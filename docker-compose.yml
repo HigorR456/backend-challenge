@@ -1,23 +1,9 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:17
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  api:
+  app:
     build: .
+    container_name: nestjs-app
     restart: unless-stopped
     ports:
       - "${PORT}:${PORT}"
@@ -29,13 +15,3 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       DATABASE_URL: ${DATABASE_URL}
-      # Variáveis para o script de migração
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  pgdata:
