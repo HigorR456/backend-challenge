@@ -1,62 +1,148 @@
-name: Deploy NestJS to AWS EC2
+name: Deploy NestJS to EC2
 
 on:
   push:
-    branches:
-      - aws
+    branches: [ aws ]
+
+env:
+  NODE_VERSION: '20'
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USER: ${{ secrets.EC2_USER }}
+  EC2_KEY: ${{ secrets.EC2_KEY }}
+  APP_DIR: /home/ubuntu/app
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    env:
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_USER: ${{ secrets.EC2_USER }}
-      RDS_URL: ${{ secrets.RDS_URL }}
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Set up Node.js
+    
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
-
-    - name: Build app locally
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'yarn'
+    
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+    
+    - name: Generate Prisma client
+      run: yarn prisma generate
+    
+    - name: Build application
+      run: yarn build
+    
+    - name: Create deployment archive
       run: |
-        yarn install --frozen-lockfile
-        yarn build
-
-    - name: Prepare SSH key
+        tar -czf deployment.tar.gz \
+          dist/ \
+          node_modules/ \
+          package.json \
+          yarn.lock \
+          prisma/
+    
+    - name: Setup SSH key
       run: |
-        echo "${{ secrets.EC2_KEY }}" > ec2_key.pem
-        chmod 600 ec2_key.pem
-
-    - name: Copy project to EC2
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Deploy to EC2
       run: |
-        rsync -avz -e "ssh -i ec2_key.pem -o StrictHostKeyChecking=no" . $EC2_USER@$EC2_HOST:~/nestjs-app
-
-    - name: Run deployment commands on EC2
+        # Upload deployment files
+        scp -i ~/.ssh/id_rsa deployment.tar.gz ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:~/
+        
+        # Connect to EC2 and deploy
+        ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          # Stop the application
+          sudo systemctl stop myapp || true
+          
+          # Create app directory if it doesn't exist
+          sudo mkdir -p ${{ env.APP_DIR }}
+          sudo chown ${{ env.EC2_USER }}:${{ env.EC2_USER }} ${{ env.APP_DIR }}
+          
+          # Backup current deployment
+          if [ -d "${{ env.APP_DIR }}/dist" ]; then
+            sudo mv ${{ env.APP_DIR }} ${{ env.APP_DIR }}_backup_$(date +%Y%m%d_%H%M%S) || true
+            sudo mkdir -p ${{ env.APP_DIR }}
+            sudo chown ${{ env.EC2_USER }}:${{ env.EC2_USER }} ${{ env.APP_DIR }}
+          fi
+          
+          # Extract new deployment
+          cd ${{ env.APP_DIR }}
+          tar -xzf ~/deployment.tar.gz
+          rm ~/deployment.tar.gz
+          
+          # Install production dependencies if needed
+          yarn install --frozen-lockfile --production
+          
+          # Generate Prisma client
+          yarn prisma generate
+        EOF
+    
+    - name: Set up environment variables on EC2
       run: |
-        ssh -i ec2_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-          cd ~/nestjs-app
-
-          export DATABASE_URL="${RDS_URL}"
-
-          # Ensure Node and PM2 are installed (Amazon Linux compatible)
-          source ~/.nvm/nvm.sh || true
-          command -v node || curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-          source ~/.nvm/nvm.sh
-          nvm install 20
-          nvm use 20
-          yarn install -g pm2
-
-          yarn install --frozen-lockfile
-          npx prisma generate
-          npx prisma migrate deploy
-
-          yarn build
-
-          pm2 restart app || pm2 start dist/main.js --name app
+        ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          cd ${{ env.APP_DIR }}
+          
+          # Create .env file with all required environment variables
+          cat > .env << 'ENVEOF'
+          NODE_ENV=production
+          PORT=${{ secrets.PORT }}
+          DOMAIN_URL=${{ secrets.DOMAIN_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          ENVEOF
+          
+          # Secure the .env file
+          chmod 600 .env
+        EOF
+    
+    - name: Run database migrations
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          cd ${{ env.APP_DIR }}
+          
+          # Run Prisma migrations
+          yarn prisma migrate deploy
+          
+          # Optionally seed the database (uncomment if needed)
+          # yarn prisma db seed
+        EOF
+    
+    - name: Start application
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          cd ${{ env.APP_DIR }}
+          
+          # Start the application using systemd
+          sudo systemctl start myapp
+          sudo systemctl enable myapp
+          
+          # Check if the application is running
+          sleep 5
+          sudo systemctl status myapp
+        EOF
+    
+    - name: Health check
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          # Wait for application to start
+          sleep 10
+          
+          # Check if the application is responding
+          curl -f http://localhost:${{ secrets.PORT }}/health || exit 1
+          
+          echo "Deployment successful!"
+        EOF
+    
+    - name: Cleanup old deployments
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          # Keep only the last 3 backup directories
+          ls -dt ${{ env.APP_DIR }}_backup_* | tail -n +4 | xargs sudo rm -rf
         EOF
